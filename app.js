@@ -77,8 +77,16 @@ async function loadAllPlaylists() {
     .filter((result) => result.status === 'fulfilled')
     .map((result) => result.value);
 
+  state.channels = [];
   state.groups = successfulGroups;
-  state.channels = successfulGroups.flatMap((group) => group.channels.map((channel) => ({ ...channel, source: group.name })));
+  state.groups.forEach((group) => {
+    group.channels = group.channels.map((channel, idx) => {
+      const id = `${group.name}::${idx}`;
+      const ch = { ...channel, source: group.name, __id: id };
+      return ch;
+    });
+    state.channels.push(...group.channels);
+  });
 
   renderCollections();
   renderAllChannelsList();
@@ -127,7 +135,7 @@ function renderCollections() {
     const rail = section.querySelector('.channel-rail');
 
     filtered.forEach((channel) => {
-      const globalIndex = state.channels.findIndex((item) => item.name === channel.name && item.source === group.name && item.url === channel.url);
+      const globalIndex = state.channels.indexOf(channel);
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'channel-card';
@@ -181,7 +189,7 @@ function renderAllChannelsList() {
     const grid = wrapper.querySelector('.all-channel-grid');
 
     filtered.forEach((channel) => {
-      const globalIndex = state.channels.findIndex((item) => item.name === channel.name && item.source === group.name && item.url === channel.url);
+      const globalIndex = state.channels.indexOf(channel);
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'all-channel-card';
